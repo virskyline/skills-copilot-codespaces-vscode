@@ -1,44 +1,27 @@
-// create web server
+// Create web server
 const express = require('express');
-const app = express();
-const mongoose = require('mongoose');
-const Comment = require('./models/Comment'); // Adjust the path to your Comment model
 const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const Comment = require('./models/Comment'); // Import the Comment model
 
-// Middleware
-app.use(express.json());
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/comments', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+// Create Express app
+const app = express();
 app.use(cors());
+app.use(bodyParser.json());
 
-// MongoDB connection
-mongoose.connect('mongodb://localhost:27017/comments', { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error(err));
-
-// Routes
-
-// Add a new comment
-app.post('/comments', async (req, res) => {
-    try {
-        const comment = new Comment(req.body);
-        await comment.save();
-        res.status(201).send(comment);
-    } catch (error) {
-        res.status(400).send(error);
-    }
-});
-
-// Get all comments
+// Endpoint to get all comments
 app.get('/comments', async (req, res) => {
-    try {
-        const comments = await Comment.find();
-        res.status(200).send(comments);
-    } catch (error) {
-        res.status(500).send(error);
-    }
-});
-
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  try {
+    const comments = await Comment.find();
+    res.status(200).json(comments);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching comments', error });
+  }
 });
